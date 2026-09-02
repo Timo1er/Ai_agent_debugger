@@ -11,10 +11,10 @@ from .specialists.logic_exception_specialist import LogicExceptionSpecialistAgen
 class MultiAgentSupervisor:
     """
     Superviseur en Chef Multi-Agents (Master Deep QA Director) :
-    Orchestre une campagne de test de limites et de détection de micro-bugs (Topologie 3D, Fuzzing d'angles,
-    Inversion de vélocité 60Hz, Fuzzing d'armes, Oracle Microscopique).
+    Orchestre une campagne d'audit en profondeur : Logique Gameplay (25 bugs de jeu réels),
+    Invariants Physiques, Shaders, Événements et Mémoire.
     """
-    def __init__(self, client: Any, llm: Optional[BaseLLMProvider] = None, duration_seconds: float = 20.0):
+    def __init__(self, client: Any, llm: Optional[BaseLLMProvider] = None, duration_seconds: float = 15.0):
         self.client = client
         self.llm = llm or LLMFactory.create_provider("heuristic")
         self.duration_seconds = max(1.0, duration_seconds)
@@ -49,21 +49,56 @@ class MultiAgentSupervisor:
 
     async def execute_multi_agent_hunt(self) -> Dict[str, Any]:
         print("\n" + "="*78)
-        print(" [DEEP QA HUNTER] LANCEMENT DU TEST DE LIMITES & CHASSE AUX MICRO-BUGS")
+        print(" [DEEP QA HUNTER] AUDIT APPROFONDI DE LA LOGIQUE DE JEU & TEST DE LIMITES")
         print("="*78)
         print(f" -> Durée de la campagne : {self.duration_seconds:.1f}s")
-        print(f" -> Laboratoires actifs  : Topologie 3D, Stress Physique, Combat Fuzzer, Oracle")
+        print(f" -> Cibles analysées    : Physique 2D/3D, Triggers, Événements, Combat & Santé")
         print("-" * 78)
 
-        await self._update_unity_hud("Superviseur IA", "Démarrage Test de Limites", "Déploiement des 5 laboratoires")
+        await self._update_unity_hud("Superviseur IA", "Audit Gameplay & Pouvoirs Game Master", "Activation autonome de l'invulnérabilité")
+        
+        # POUVOIR AUTONOME #1 : L'IA active d'elle-même le GodMode pour ne jamais mourir pendant les tests
+        try:
+            if hasattr(self.client, "set_god_mode"):
+                await self.client.set_god_mode(True)
+                print("   -> [POUVOIR AUTONOME IA] GodMode activé : Le joueur est invulnérable pour toute la durée des tests.")
+        except Exception:
+            pass
+
+        try:
+            if hasattr(self.client, "start_player_exploration"):
+                await self.client.start_player_exploration(duration=self.duration_seconds)
+        except Exception:
+            pass
 
         t_start = time.perf_counter()
         all_bugs: List[Dict[str, Any]] = []
         phase_time = self.duration_seconds / 5.0
 
-        # === 1. TOPOLOGIE 3D & SCAN DE GÉOMÉTRIE (RAYCAST 360°) ===
-        print(f"\n[LAB 1/5] [SPATIAL EXPLORER] Scan topologique 360° du niveau & trous de colliders...")
-        await self._update_unity_hud("Spatial Explorer", "Scan Topologique 360°", "Lancer de rayons omnidirectionnels")
+        # === 1. AUDIT PROFOND DE LOGIQUE GAMEPLAY (25 RÈGLES DE JEU REELLES) ===
+        print(f"\n[PHASE 1/5] [DEEP GAMEPLAY AUDITOR] Analyse des scripts, triggers, saut infini et PV...")
+        await self._update_unity_hud("Deep Gameplay Auditor", "Scan Logique Scripts & Triggers", "Détection des 25 bugs réels")
+        try:
+            if hasattr(self.client, "audit_gameplay_bugs"):
+                gameplay_bugs = await self.client.audit_gameplay_bugs()
+                for gb in gameplay_bugs:
+                    if not any(x.get("title") == gb.get("title") for x in all_bugs):
+                        all_bugs.append({
+                            "specialist": "Agent-Gameplay-Auditor",
+                            "domain": gb.get("domain", "Gameplay Logic"),
+                            "severity": gb.get("severity", "HIGH"),
+                            "title": gb.get("title"),
+                            "description": gb.get("description"),
+                            "fix": gb.get("fix", "")
+                        })
+                        print(f"   -> [BUG DETECTE] [{gb.get('severity')}] {gb.get('title')}")
+        except Exception as ex:
+            print(f"   -> Gameplay audit: {ex}")
+        await asyncio.sleep(phase_time)
+
+        # === 2. TOPOLOGIE 3D & SCAN DE GÉOMÉTRIE ===
+        print(f"\n[PHASE 2/5] [SPATIAL EXPLORER] Scan de collision et limites de niveau...")
+        await self._update_unity_hud("Spatial Explorer", "Scan Géométrie 360°", "Vérification des parois et colliders")
         try:
             if hasattr(self.client, "scan_geometry_360"):
                 geo_res = await self.client.scan_geometry_360()
@@ -80,14 +115,27 @@ class MultiAgentSupervisor:
             pass
         await asyncio.sleep(phase_time)
 
-        # === 2. STRESS PHYSIQUE D'ANGLES AIGUS & INVERSION DE VÉLOCITÉ ===
-        print(f"\n[LAB 2/5] [PHYSICAL STRESS LAB] Coin aigu (<45°) & Inversion de vélocité à 60Hz...")
-        await self._update_unity_hud("Agent-Physique", "Stress Coin Aigu & Vélocité 60Hz", "Test de coincement et tunneling")
+        # === 3. STRESS PHYSIQUE, TÉLÉPORTATION AUTONOME & COLLISION FUZZING ===
+        print(f"\n[PHASE 3/5] [PHYSICAL STRESS LAB] Téléportation autonome multi-secteurs & Fuzzing...")
+        await self._update_unity_hud("Agent-Physique", "Téléportation & Stress Collisions", "Test des 3 secteurs du niveau")
+        
+        # POUVOIR AUTONOME #2 : L'IA se téléporte d'elle-même dans les 3 secteurs clés du niveau pour éprouver les collisions
+        try:
+            if hasattr(self.client, "teleport"):
+                print("   -> [POUVOIR AUTONOME IA] Téléportation vers Secteur Milieu (8, 2)...")
+                await self.client.teleport(8.0, 2.0, 0.0)
+                await asyncio.sleep(1.0)
+                print("   -> [POUVOIR AUTONOME IA] Téléportation vers Secteur Fin (18, 3)...")
+                await self.client.teleport(18.0, 3.0, 0.0)
+                await asyncio.sleep(1.0)
+                print("   -> [POUVOIR AUTONOME IA] Retour au sol pour test de course continue...")
+                await self.client.teleport(0.0, -1.0, 0.0)
+        except Exception:
+            pass
+        await self._update_unity_hud("Agent-Physique", "Stress Collisions & Fuzzing", "Test de coincement et rupture")
         try:
             if hasattr(self.client, "stress_physics_corner"):
                 await self.client.stress_physics_corner()
-            if hasattr(self.client, "stress_physics_velocity"):
-                await self.client.stress_physics_velocity()
             if hasattr(self.client, "drive_player_fuzz"):
                 await self.client.drive_player_fuzz(duration=0.5)
         except Exception:
@@ -98,29 +146,17 @@ class MultiAgentSupervisor:
             if not any(x["title"] == b["title"] for x in all_bugs): all_bugs.append(b)
         await asyncio.sleep(phase_time)
 
-        # === 3. COMBAT & WEAPON STATE MACHINE FUZZING ===
-        print(f"\n[LAB 3/5] [COMBAT ACTION FUZZER] Fuzzing d'armes & Concurrence de tir/rechargement...")
-        await self._update_unity_hud("Agent-Animation-State", "Fuzzing d'Armes & Transitions", "Vérification des armes superposées")
-        try:
-            if hasattr(self.client, "fuzz_combat_weapons"):
-                await self.client.fuzz_combat_weapons()
-        except Exception:
-            pass
-        bugs_a = await self.specialists[2].investigate_and_hunt(context)
-        for b in bugs_a:
-            if not any(x["title"] == b["title"] for x in all_bugs): all_bugs.append(b)
-        await asyncio.sleep(phase_time)
-
-        # === 4. PROFILAGE DE PRÉCISION MÉMOIRE & MICRO-STUTTERS ===
-        print(f"\n[LAB 4/5] [PERFORMANCE PROFILER] Détection des micro-gels (99th percentile hitch)...")
-        await self._update_unity_hud("Agent-Performance", "Traque des Micro-Gels (>33ms)", "Mesure de la gigue de rendu")
+        # === 4. PROFILAGE DE PRÉCISION MÉMOIRE & EXCEPTIONS ===
+        print(f"\n[PHASE 4/5] [PERFORMANCE PROFILER] Traque des fuites mémoire et exceptions...")
+        await self._update_unity_hud("Agent-Performance & Logique", "Surveillance GC & Exceptions C#", "Capture des erreurs runtime")
         bugs_m = await self.specialists[1].investigate_and_hunt(context)
-        for b in bugs_m:
+        bugs_l = await self.specialists[4].investigate_and_hunt(context)
+        for b in bugs_m + bugs_l:
             if not any(x["title"] == b["title"] for x in all_bugs): all_bugs.append(b)
         await asyncio.sleep(phase_time)
 
-        # === 5. ORACLE MICROSCOPIQUE (SHADERS ROSES, COORDONNÉES NAN, AUDIO, EXCEPTIONS) ===
-        print(f"\n[LAB 5/5] [MICROSCOPIC INVARIANT ORACLE] Audit des Shaders roses, NaN, Exceptions et Audio...")
+        # === 5. ORACLE MICROSCOPIQUE (SHADERS ROSES, COORDONNÉES NAN, AUDIO) ===
+        print(f"\n[PHASE 5/5] [MICROSCOPIC INVARIANT ORACLE] Audit des Shaders roses, NaN et Audio...")
         await self._update_unity_hud("Microscopic Oracle", "Audit Invariants Microscopiques", "Scan shaders, NaN et audio")
         try:
             if hasattr(self.client, "run_microscopic_audit"):
@@ -153,35 +189,44 @@ class MultiAgentSupervisor:
                             "description": "Le volume audio global est à zéro.",
                             "fix": "AudioListener.volume = 1.0f;"
                         })
-                    if micro_res.get("playerIgnoresEnemies", False):
-                        all_bugs.append({
-                            "specialist": "Agent-Physique",
-                            "domain": "Collision Layer Matrix",
-                            "severity": "HIGH",
-                            "title": "Matrice de collision désactivée : Player traverse Enemy",
-                            "description": "Physics.GetIgnoreLayerCollision(Player, Enemy) est à true.",
-                            "fix": "Physics.IgnoreLayerCollision(LayerMask.NameToLayer(\"Player\"), LayerMask.NameToLayer(\"Enemy\"), false);"
-                        })
         except Exception:
             pass
 
-        bugs_r = await self.specialists[3].investigate_and_hunt(context)
-        bugs_l = await self.specialists[4].investigate_and_hunt(context)
-        for b in bugs_r + bugs_l:
-            if not any(x["title"] == b["title"] for x in all_bugs): all_bugs.append(b)
-
         await asyncio.sleep(phase_time)
+
+                # === RÉCOLTE FINALE DE TOUS LES ÉVÉNEMENTS DE TUNNELING & COLLISIONS SUR LA DURÉE TOTALE ===
+        print(f"\n[SYNTHESE] Récolte des événements de collision et sentinelles physiques...")
+        try:
+            if hasattr(self.client, "get_tunneling_events"):
+                tunnel_events = await self.client.get_tunneling_events()
+                for ev in (tunnel_events or []):
+                    obs = ev.get("obstacleName", "Obstacle/Mur")
+                    fx, fy = ev.get("fromX", 0.0), ev.get("fromY", 0.0)
+                    tx, ty = ev.get("toX", 0.0), ev.get("toY", 0.0)
+                    title = f"Traversée anormale de collision / Tunneling sur '{obs}'"
+                    if not any(x.get("title") == title for x in all_bugs):
+                        all_bugs.append({
+                            "specialist": "Agent-Physique",
+                            "domain": "Physics & Collisions",
+                            "severity": "CRITICAL",
+                            "title": title,
+                            "description": f"Le personnage a traversé le collider solide '{obs}' de ({fx:.2f}, {fy:.2f}) à ({tx:.2f}, {ty:.2f}) sans collision physique.",
+                            "fix": "1. Passer Rigidbody2D.collisionDetectionMode en Continuous.\n2. Remplacer les téléportations Dash (transform.position += ...) par des impulsions physiques Rigidbody2D.AddForce."
+                        })
+                        print(f"   -> [COLLISION DETECTEE] [CRITICAL] {title}")
+        except Exception as ex:
+            print(f"   -> Tunneling harvest: {ex}")
 
         total_time = time.perf_counter() - t_start
 
         # Synthèse finale
-        await self._update_unity_hud("Superviseur IA", f"Audit de Limites Terminé ({len(all_bugs)} bugs)", "Rapport généré", is_alert=len(all_bugs)>0)
+        await self._update_unity_hud("Superviseur IA", f"Audit Terminé : {len(all_bugs)} bugs détectés", "Rapport généré", is_alert=len(all_bugs)>0)
         report = self._synthesize_report(all_bugs, total_time)
         return report
 
     def _synthesize_report(self, bugs: List[Dict[str, Any]], duration_sec: float) -> Dict[str, Any]:
         print("\n" + "="*78)
-        print(" RAPPORT EXECUTIVE DE CHASSE AUX MICRO-BUGS & LIMITES (DEEP QA)")
+        print(" RAPPORT EXECUTIVE DE CHASSE AUX BUGS GAMEPLAY (DEEP QA AUDIT)")
         print("="*78)
         print(f" Durée totale de l'audit        : {duration_sec:.2f} secondes")
         print(f" Total d'anomalies confirmées   : {len(bugs)}")
@@ -189,7 +234,7 @@ class MultiAgentSupervisor:
 
         if not bugs:
             print(" [SUPERVISEUR] JEU 100% CONFORME AUX CRITERES QA LES PLUS STRICTS !")
-            print(" -> 0 trou de géométrie, 0 shader rose, 0 valeur NaN, physique et armes parfaites.")
+            print(" -> Aucun bug de logique gameplay, physique, shader ou trigger détecté.")
         else:
             for idx, b in enumerate(bugs, 1):
                 print(f"\n [BUG #{idx}] [{b.get('severity','HIGH')}] {b.get('title')}")

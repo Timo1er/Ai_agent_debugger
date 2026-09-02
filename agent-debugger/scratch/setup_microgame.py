@@ -34,7 +34,7 @@ public static class AIDebuggerMenu
 
         Selection.activeGameObject = go;
         Debug.Log("[AI Debugger] Serveur universel de débogage IA installé avec succès sur [AI-Debugger] !");
-        EditorUtility.DisplayDialog("AI Debugger", "Le serveur de débogage IA a été installé dans votre scène avec succès !\\n\\nVous pouvez maintenant lancer le jeu en mode Play (▶️).", "Super !");
+        EditorUtility.DisplayDialog("AI Debugger", "Le serveur de débogage IA a été installé dans votre scène avec succès !\\n\\nVous pouvez maintenant lancer le jeu en mode Play ([PLAY]).", "Super !");
     }
 }
 """

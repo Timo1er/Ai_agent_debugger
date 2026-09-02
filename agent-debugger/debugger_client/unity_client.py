@@ -49,7 +49,7 @@ class UnityDebuggerClient:
                 return True
             except Exception:
                 if attempt < retries:
-                    print(f"[AI-Debugger] En attente du lancement de Unity Play Mode (▶️) sur {self.uri} (Essai {attempt}/{retries})...")
+                    print(f"[AI-Debugger] En attente du lancement de Unity Play Mode ([PLAY]) sur {self.uri} (Essai {attempt}/{retries})...")
                     await asyncio.sleep(1.5)
         return False
 
@@ -197,6 +197,26 @@ class UnityDebuggerClient:
     async def get_chaos_status(self) -> Dict[str, Any]:
         return await self.call("chaos.getStatus")
 
+    async def set_god_mode(self, enabled: bool = True) -> bool:
+        res = await self.call("gamemaster.setGodMode", {"args": [str(enabled).lower()]})
+        return res.get("success", False) if isinstance(res, dict) else False
+
+    async def set_fly_mode(self, enabled: bool = True, vertical_speed: float = 0.0) -> bool:
+        res = await self.call("gamemaster.setFlyMode", {"args": [str(enabled).lower(), str(vertical_speed)]})
+        return res.get("success", False) if isinstance(res, dict) else False
+
+    async def teleport(self, x: float, y: float, z: float = 0.0) -> bool:
+        res = await self.call("gamemaster.teleport", {"args": [str(x), str(y), str(z)]})
+        return res.get("success", False) if isinstance(res, dict) else False
+
+    async def reset_level(self) -> bool:
+        res = await self.call("gamemaster.resetLevel")
+        return res.get("success", False) if isinstance(res, dict) else False
+
+    async def start_player_exploration(self, duration: float = 30.0) -> bool:
+        res = await self.call("player.explore", {"args": [str(duration)]})
+        return res.get("success", False) if isinstance(res, dict) else False
+
     async def drive_player_move(self, move_x: float = 0.0, move_z: float = 1.0, yaw: float = 0.0, sprint: bool = True, jump: bool = False, duration: float = 2.0) -> bool:
         res = await self.call("player.move", {
             "args": [str(move_x), str(move_z), str(yaw), str(sprint).lower(), str(jump).lower(), str(duration)]
@@ -206,6 +226,14 @@ class UnityDebuggerClient:
     async def drive_player_fuzz(self, duration: float = 3.0) -> bool:
         res = await self.call("player.fuzz", {"args": [str(duration)]})
         return res.get("success", False) if isinstance(res, dict) else False
+
+    async def audit_gameplay_bugs(self) -> List[Dict[str, Any]]:
+        res = await self.call("gameplay.auditBugs")
+        return res if isinstance(res, list) else []
+
+    async def get_tunneling_events(self) -> List[Dict[str, Any]]:
+        res = await self.call("spatial.getTunnelingEvents")
+        return res if isinstance(res, list) else []
 
     async def scan_geometry_360(self) -> Dict[str, Any]:
         res = await self.call("spatial.scanGeometry")
