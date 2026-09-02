@@ -1,0 +1,19 @@
+{
+  "name": "com.ai.agent.debugger",
+  "version": "1.0.0",
+  "displayName": "AI Agent Universal Debugger",
+  "description": "Real-time bidirectional telemetry, reflection inspection, time-step control, dynamic code evaluation, and chaos engine for autonomous AI debugging agents.",
+  "unity": "2021.3",
+  "dependencies": {},
+  "keywords": [
+    "debugging",
+    "ai-agent",
+    "telemetry",
+    "reflection",
+    "hot-reload",
+    "chaos-engineering"
+  ],
+  "author": {
+    "name": "AI Debugger Architecture Team"
+  }
+}
