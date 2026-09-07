@@ -60,6 +60,7 @@ public static class AIDebuggerMenu
 
         go.AddComponent<AIPlayerDriver>();
         go.AddComponent<AIGameMasterController>();
+        go.AddComponent<AIGameMenuOperator>();
         go.AddComponent<DeepGameplayLogicAuditor>();
 
         go.AddComponent<SpatialExplorer>();

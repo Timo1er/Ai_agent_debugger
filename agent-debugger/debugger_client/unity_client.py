@@ -39,7 +39,7 @@ class UnityDebuggerClient:
     def latest_snapshot(self) -> Optional[TelemetrySnapshot]:
         return self._latest_snapshot
 
-    async def connect(self, timeout: float = 3.0, retries: int = 6) -> bool:
+    async def connect(self, timeout: float = 2.0, retries: int = 12) -> bool:
         for attempt in range(1, retries + 1):
             try:
                 self._ws = await asyncio.wait_for(websockets.connect(self.uri), timeout=timeout)
@@ -196,6 +196,18 @@ class UnityDebuggerClient:
 
     async def get_chaos_status(self) -> Dict[str, Any]:
         return await self.call("chaos.getStatus")
+
+    async def get_ui_elements(self) -> List[Dict[str, Any]]:
+        res = await self.call("ui.getInteractiveElements")
+        return res if isinstance(res, list) else []
+
+    async def click_button(self, name: str) -> bool:
+        res = await self.call("ui.clickButton", {"args": [name]})
+        return res.get("success", False) if isinstance(res, dict) else False
+
+    async def load_game_level(self, level_index: int) -> bool:
+        res = await self.call("gamemanager.loadLevel", {"args": [str(level_index)]})
+        return res.get("success", False) if isinstance(res, dict) else False
 
     async def set_god_mode(self, enabled: bool = True) -> bool:
         res = await self.call("gamemaster.setGodMode", {"args": [str(enabled).lower()]})

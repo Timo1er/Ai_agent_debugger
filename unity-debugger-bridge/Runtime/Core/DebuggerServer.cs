@@ -66,6 +66,33 @@ namespace AIDebugger.Core
 
 
 
+                [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void AutoStartOnPlayMode()
+        {
+            if (UnityCompat.FindAny<DebuggerServer>() == null)
+            {
+                var go = new GameObject("[AI-Debugger]");
+                DontDestroyOnLoad(go);
+                go.AddComponent<MainThreadDispatcher>();
+                go.AddComponent<DebuggerServer>();
+                go.AddComponent<AIPlayerDriver>();
+                go.AddComponent<AIGameMasterController>();
+                go.AddComponent<AIGameMenuOperator>();
+                go.AddComponent<DeepGameplayLogicAuditor>();
+                go.AddComponent<SpatialExplorer>();
+                go.AddComponent<PhysicalStressLab>();
+                go.AddComponent<CombatActionFuzzer>();
+                go.AddComponent<MicroscopicInvariantOracle>();
+                go.AddComponent<AIDebuggerOverlay>();
+                go.AddComponent<SpatialTracker>();
+                go.AddComponent<TrajectoryTunnelingSentinel>();
+                go.AddComponent<ProfilerMetricsCollector>();
+                go.AddComponent<LogInterceptor>();
+                go.AddComponent<TelemetryStreamer>();
+                Debug.Log("<color=green><b>[AI DEBUGGER]</b> Serveur et modules IA auto-démarrés sur ws://127.0.0.1:8080 !</color>");
+            }
+        }
+
         private void Awake()
 
         {
@@ -98,12 +125,13 @@ namespace AIDebugger.Core
 
 
 
-        private void OnDestroy()
-
+                private void OnDestroy()
         {
-
-            StopServer();
-
+            if (_instance == this)
+            {
+                StopServer();
+                _instance = null;
+            }
         }
 
 
@@ -553,6 +581,30 @@ namespace AIDebugger.Core
                                 // === PLAYER ACTIVE DRIVER ===
                                 // === PLAYER EXPLORATION ===
                                 // === GAME MASTER / GOD MODE POWERS ===
+                                // === UI & GAME MENU OPERATOR ===
+                if (method == "ui.getInteractiveElements")
+                {
+                    var elements = AIGameMenuOperator.Instance != null ? AIGameMenuOperator.Instance.GetInteractiveElements() : new List<UIElementDto>();
+                    client.SendResponse(request.id, elements);
+                    return;
+                }
+                if (method == "ui.clickButton")
+                {
+                    string bName = "";
+                    if (request.args != null && request.args.Length > 0) bName = request.args[0];
+                    bool ok = AIGameMenuOperator.Instance != null && AIGameMenuOperator.Instance.ClickButtonByName(bName);
+                    client.SendResponse(request.id, new { success = ok, button = bName });
+                    return;
+                }
+                if (method == "gamemanager.loadLevel")
+                {
+                    int lvl = 1;
+                    if (request.args != null && request.args.Length > 0) int.TryParse(request.args[0], out lvl);
+                    bool ok = AIGameMenuOperator.Instance != null && AIGameMenuOperator.Instance.LoadGameLevel(lvl);
+                    client.SendResponse(request.id, new { success = ok, level = lvl });
+                    return;
+                }
+
                 if (method == "gamemaster.setGodMode")
                 {
                     bool enabled = true;

@@ -11,7 +11,7 @@ from llm.llm_provider import LLMFactory
 from benchmark.evaluation_harness import EvaluationBenchmarkHarness
 from benchmark.debug_game_benchmark import DebugGameBenchmarkHarness
 
-async def run_live_debugger(host: str, port: int, provider: str, api_key: str, hunt_mode: bool = False, duration: float = 15.0):
+async def run_live_debugger(host: str, port: int, provider: str, api_key: str, model_name: str = "gemini-2.5-flash", hunt_mode: bool = False, duration: float = 15.0, godmode: bool = False, fly: bool = False, reset: bool = False, teleport: list = None):
     print(f"[AI-Debugger] Connecting to Unity Engine at ws://{host}:{port}...")
     client = UnityDebuggerClient(host=host, port=port)
     connected = await client.connect()
@@ -20,7 +20,36 @@ async def run_live_debugger(host: str, port: int, provider: str, api_key: str, h
         sys.exit(1)
 
     print("[AI-Debugger] Connected successfully! Initializing Multi-Agent Supervisor...")
-    llm = LLMFactory.create_provider(provider, api_key=api_key)
+    llm = LLMFactory.create_provider(provider, api_key=api_key, model_name=model_name)
+
+    if godmode:
+        print("[GAME MASTER] Activation du GodMode...")
+        await client.set_god_mode(True)
+        print("[OK] Joueur invulnérable.")
+        await client.disconnect()
+        return
+
+    if fly:
+        print("[GAME MASTER] Activation du Vol Libre (Fly / NoClip)...")
+        await client.set_fly_mode(True, 3.0)
+        print("[OK] Vol actif.")
+        await client.disconnect()
+        return
+
+    if reset:
+        print("[GAME MASTER] Rechargement du niveau...")
+        await client.reset_level()
+        print("[OK] Niveau réinitialisé.")
+        await client.disconnect()
+        return
+
+    if teleport:
+        x, y, z = teleport
+        print(f"[GAME MASTER] Téléportation vers ({x}, {y}, {z})...")
+        await client.teleport(x, y, z)
+        print("[OK] Téléporté.")
+        await client.disconnect()
+        return
 
     if hunt_mode:
         supervisor = MultiAgentSupervisor(client, llm, duration_seconds=duration)
@@ -47,7 +76,7 @@ async def run_live_debugger(host: str, port: int, provider: str, api_key: str, h
                 has_error = snapshot.recentLogs and any(l.type in ["Error", "Exception"] for l in snapshot.recentLogs)
                 fps_low = snapshot.metrics and snapshot.metrics.fps < 25.0
                 if has_error or fps_low:
-                    print("\n[AI-Debugger] Detected live anomaly! Deploying specialized multi-agent squad...")
+                    print("\n[AI-Debugger] Detected live anomaly! Deploying specialized multi-agent squad with Gemini AI reasoning...")
                     supervisor = MultiAgentSupervisor(client, llm, duration_seconds=duration)
                     await supervisor.execute_multi_agent_hunt()
     except KeyboardInterrupt:
@@ -55,18 +84,17 @@ async def run_live_debugger(host: str, port: int, provider: str, api_key: str, h
     finally:
         await client.disconnect()
 
-async def run_debug_game_live(host: str, port: int, provider: str, api_key: str, hunt_mode: bool = False, duration: float = 15.0):
+async def run_debug_game_live(host: str, port: int, provider: str, api_key: str, model_name: str = "gemini-2.5-flash", hunt_mode: bool = False, duration: float = 15.0):
     print(f"[AI-Debugger] Connexion au serveur de télémétrie de Unity sur ws://{host}:{port}/ ...")
     client = DebugGameClient(host=host, port=port)
     connected = await client.connect(timeout=5.0, retries=4)
     if not connected:
         print(f"\n[AI-Debugger] ERREUR : Impossible d'établir la liaison WebSocket avec ws://{host}:{port}/")
         print(" -> Vérifiez que le projet est en mode PLAY dans Unity Editor.")
-        print(" -> Ou pour lancer le benchmark autonome sans Unity : python main.py --debug-game --mock")
         sys.exit(1)
 
     print(f"[AI-Debugger] Connecté avec succès à Unity (ws://{host}:{port}/) !")
-    llm = LLMFactory.create_provider(provider, api_key=api_key)
+    llm = LLMFactory.create_provider(provider, api_key=api_key, model_name=model_name)
 
     if hunt_mode:
         supervisor = MultiAgentSupervisor(client, llm, duration_seconds=duration)
@@ -76,8 +104,7 @@ async def run_debug_game_live(host: str, port: int, provider: str, api_key: str,
 
     orchestrator = DebugGameOrchestrator(client, llm)
     await orchestrator.initialize()
-
-    print("[AI-Debugger] Superviseur IA actif : Détection & Résolution automatique des bugs en temps réel (Ctrl+C pour quitter)...")
+    print("[AI-Debugger] Superviseur IA actif avec Gemini AI : Détection & Résolution automatique des bugs en temps réel...")
     
     last_print = 0
     try:
@@ -86,7 +113,6 @@ async def run_debug_game_live(host: str, port: int, provider: str, api_key: str,
             snap = client.latest_snapshot
             if snap:
                 await orchestrator.handle_snapshot(snap)
-                
                 now = asyncio.get_event_loop().time()
                 if now - last_print > 3.0:
                     last_print = now
@@ -98,11 +124,13 @@ async def run_debug_game_live(host: str, port: int, provider: str, api_key: str,
         await client.disconnect()
 
 def main():
-    parser = argparse.ArgumentParser(description="AI Agent Universal Debugger & Multi-Agent Squad for Unity 2D & 3D")
+    parser = argparse.ArgumentParser(description="AI Agent Universal Debugger & Multi-Agent Squad powered by Google Gemini AI")
     parser.add_argument("--host", default="127.0.0.1", help="Unity Debugger host IP")
     parser.add_argument("--port", type=int, default=8080, help="Unity Debugger port (default 8080, Debug-game uses 8765)")
-    parser.add_argument("--provider", default="heuristic", choices=["heuristic", "gemini", "openai"], help="LLM Provider")
-    parser.add_argument("--api-key", default=None, help="LLM API Key")
+    parser.add_argument("--provider", default="auto", choices=["auto", "gemini", "heuristic", "openai"], help="LLM Provider (default 'auto', uses Gemini if API key is present)")
+    parser.add_argument("--gemini", action="store_true", help="Forcer l'utilisation de Google Gemini AI")
+    parser.add_argument("--model", default="gemini-2.5-flash", help="Modèle Gemini (ex: gemini-2.5-flash, gemini-2.0-flash, gemini-1.5-pro)")
+    parser.add_argument("--api-key", default=None, help="LLM API Key (ou définir GEMINI_API_KEY dans l'environnement ou .env)")
     parser.add_argument("--benchmark", action="store_true", help="Run automated benchmark evaluation")
     parser.add_argument("--godmode", action="store_true", help="Activer le GodMode (Invulnérabilité totale)")
     parser.add_argument("--fly", action="store_true", help="Activer le vol libre (Fly/NoClip)")
@@ -115,18 +143,24 @@ def main():
 
     args = parser.parse_args()
 
+    prov = "gemini" if args.gemini else args.provider
+
     if args.debug_game:
         port = args.port if args.port != 8080 else 8765
         if args.benchmark or args.mock:
             harness = DebugGameBenchmarkHarness(host=args.host, port=port, use_mock=args.mock)
             asyncio.run(harness.run_benchmark())
         else:
-            asyncio.run(run_debug_game_live(args.host, port, args.provider, args.api_key, hunt_mode=args.hunt, duration=args.duration))
+            asyncio.run(run_debug_game_live(args.host, port, prov, args.api_key, model_name=args.model, hunt_mode=args.hunt, duration=args.duration))
     elif args.benchmark:
         harness = EvaluationBenchmarkHarness(port=8099)
         asyncio.run(harness.run_benchmark())
     else:
-        asyncio.run(run_live_debugger(args.host, args.port, args.provider, args.api_key, hunt_mode=args.hunt, duration=args.duration))
+        asyncio.run(run_live_debugger(
+            args.host, args.port, prov, args.api_key, model_name=args.model,
+            hunt_mode=args.hunt, duration=args.duration,
+            godmode=args.godmode, fly=args.fly, reset=args.reset, teleport=args.teleport
+        ))
 
 if __name__ == "__main__":
     main()
